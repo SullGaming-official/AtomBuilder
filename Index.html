@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="icon" type="image/png" href="Atom_Builder_Icon.png">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Atom Builder</title>
+<style>
+:root{--bg:#f6f7fb;--card:#fff;--tx:#1b1e2b;--mut:#6b7086;--line:#d9dcea;--acc:#6d5efc;--ok:#16a34a;--bad:#dc2626;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12141c;--card:#1c1f2b;--tx:#eceefa;--mut:#9a9fb8;--line:#33374a;--acc:#8b7fff;--ok:#4ade80;--bad:#f87171}}
+:root[data-theme="dark"]{--bg:#12141c;--card:#1c1f2b;--tx:#eceefa;--mut:#9a9fb8;--line:#33374a;--acc:#8b7fff;--ok:#4ade80;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:980px;margin:0 auto;padding:14px;display:grid;gap:14px;grid-template-columns:1fr 1fr}
+@media(max-width:780px){main{grid-template-columns:1fr}}
+h1{grid-column:1/-1;margin:4px 0 0;font-size:22px}
+h1 small{display:block;font-size:13px;font-weight:400;color:var(--mut)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+h2{margin:0 0 8px;font-size:15px;color:var(--mut);font-weight:600}
+canvas{width:100%;max-width:320px;aspect-ratio:1;display:block;margin:0 auto}
+.info{text-align:center;min-height:74px}
+.sym{font-size:32px;font-weight:700}
+.mut{color:var(--mut);font-size:13px}
+.ctl{display:grid;grid-template-columns:1fr repeat(4,42px);gap:6px;align-items:center;margin-top:8px}
+.ctl span{font-weight:600}
+button{font:inherit;border:1px solid var(--line);background:var(--card);color:var(--tx);border-radius:10px;padding:8px 6px;cursor:pointer}
+button:disabled{opacity:.4;cursor:default}
+.big{width:100%;margin-top:12px;background:var(--acc);color:#fff;border:0;font-weight:700;padding:12px}
+.row2{display:flex;gap:8px;margin-top:10px}.row2 button{flex:1;font-size:13px}
+.dp{color:#e5484d}.dn{color:#8b8fa3}.de{color:#3b82f6}
+#msg{min-height:20px;margin-top:8px;text-align:center;font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:6px;min-height:34px}
+.chip{border:1px solid var(--acc);border-radius:8px;padding:3px 9px;font-weight:700;cursor:pointer;background:transparent;color:var(--tx)}
+.chip b{margin-left:5px;color:var(--acc)}
+.res{margin-top:14px;text-align:center;min-height:90px}
+.ok{border:2px solid var(--ok);border-radius:12px;padding:12px}
+.ok .nm{font-size:22px;font-weight:700}.ok .fm{font-size:28px;font-weight:700;color:var(--ok)}
+.no{color:var(--bad);font-size:22px;font-weight:700;padding-top:22px}
+.row2 button.on{background:var(--acc);color:#fff;border-color:var(--acc)}
+.rec{border-top:1px solid var(--line);padding:6px 0}.f{font-weight:700;font-size:17px}
+#book{max-height:340px;overflow:auto}
+</style></head><body>
+<main>
+<h1>⚛️ Atom Builder<small>Build mystery atoms from protons, neutrons and electrons. You only find out which element you made once you collect it, then mix atoms to see what you’ve made.</small></h1>
+
+<section class="card">
+  <h2>1 · Atom workbench</h2>
+  <canvas id="cv"></canvas>
+  <div class="info" id="info"></div>
+  <div class="ctl"><span class="dp">● Protons <b id="cp">0</b></span><button data-k="p" data-d="-10">−10</button><button data-k="p" data-d="-1">−</button><button data-k="p" data-d="1">+</button><button data-k="p" data-d="10">+10</button></div>
+  <div class="ctl"><span class="dn">● Neutrons <b id="cn">0</b></span><button data-k="n" data-d="-10">−10</button><button data-k="n" data-d="-1">−</button><button data-k="n" data-d="1">+</button><button data-k="n" data-d="10">+10</button></div>
+  <div class="ctl"><span class="de">● Electrons <b id="ce">0</b></span><button data-k="e" data-d="-10">−10</button><button data-k="e" data-d="-1">−</button><button data-k="e" data-d="1">+</button><button data-k="e" data-d="10">+10</button></div>
+  <div class="row2"><button id="me">Electrons = protons</button><button id="mn">Suggest neutrons</button></div>
+  <button class="big" id="collect">Collect atom</button>
+  <div id="msg"></div>
+</section>
+
+<section class="card">
+  <div class="row2" style="margin:0 0 10px"><button data-mode="mix">Tap to mix</button><button data-mode="split">Tap to take apart</button></div>
+  <h2>2 · Your atoms <span class="mut">(tap uses the mode above)</span></h2>
+  <div class="chips" id="inv"></div>
+  <h2 style="margin-top:16px">3 · Your molecules <span class="mut">(saved on this device)</span></h2>
+  <div class="chips" id="molInv"></div>
+  <h2 style="margin-top:16px">4 · Mixer <span class="mut">(tap to take one out)</span></h2>
+  <div class="chips" id="bench"></div>
+  <div class="row2"><button id="clr">Clear mixer</button></div>
+  <button class="big" id="combine">Combine</button>
+  <div class="res" id="res"></div>
+</section>
+<section class="card" style="grid-column:1/-1"><h2>📖 Recipe book <span id="bk"></span></h2><div id="book"></div></section>
+</main>
+<script>
+const SY="H He Li Be B C N O F Ne Na Mg Al Si P S Cl Ar K Ca Sc Ti V Cr Mn Fe Co Ni Cu Zn Ga Ge As Se Br Kr Rb Sr Y Zr Nb Mo Tc Ru Rh Pd Ag Cd In Sn Sb Te I Xe Cs Ba La Ce Pr Nd Pm Sm Eu Gd Tb Dy Ho Er Tm Yb Lu Hf Ta W Re Os Ir Pt Au Hg Tl Pb Bi Po At Rn Fr Ra Ac Th Pa U Np Pu Am Cm Bk Cf Es Fm Md No Lr Rf Db Sg Bh Hs Mt Ds Rg Cn Nh Fl Mc Lv Ts Og".split(" ");
+const NM="Hydrogen,Helium,Lithium,Beryllium,Boron,Carbon,Nitrogen,Oxygen,Fluorine,Neon,Sodium,Magnesium,Aluminium,Silicon,Phosphorus,Sulfur,Chlorine,Argon,Potassium,Calcium,Scandium,Titanium,Vanadium,Chromium,Manganese,Iron,Cobalt,Nickel,Copper,Zinc,Gallium,Germanium,Arsenic,Selenium,Bromine,Krypton,Rubidium,Strontium,Yttrium,Zirconium,Niobium,Molybdenum,Technetium,Ruthenium,Rhodium,Palladium,Silver,Cadmium,Indium,Tin,Antimony,Tellurium,Iodine,Xenon,Caesium,Barium,Lanthanum,Cerium,Praseodymium,Neodymium,Promethium,Samarium,Europium,Gadolinium,Terbium,Dysprosium,Holmium,Erbium,Thulium,Ytterbium,Lutetium,Hafnium,Tantalum,Tungsten,Rhenium,Osmium,Iridium,Platinum,Gold,Mercury,Thallium,Lead,Bismuth,Polonium,Astatine,Radon,Francium,Radium,Actinium,Thorium,Protactinium,Uranium,Neptunium,Plutonium,Americium,Curium,Berkelium,Californium,Einsteinium,Fermium,Mendelevium,Nobelium,Lawrencium,Rutherfordium,Dubnium,Seaborgium,Bohrium,Hassium,Meitnerium,Darmstadtium,Roentgenium,Copernicium,Nihonium,Flerovium,Moscovium,Livermorium,Tennessine,Oganesson".split(",");
+const CAP=[2,8,18,32,32,18,8],MAX={p:118,n:180,e:118};
+const S={p:0,n:0,e:0},inv={},bench={},mol={},benchM={},book={el:{},mo:{}},KEY="atomBuilderSave1";
+let mode="mix";
+function save(){try{const I={...inv},M={...mol};for(const k in bench)I[k]=(I[k]||0)+bench[k];for(const k in benchM)M[k]=(M[k]||0)+benchM[k];localStorage.setItem(KEY,JSON.stringify({inv:I,mol:M,book}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem(KEY)||"{}");Object.assign(inv,d.inv||{});Object.assign(mol,d.mol||{});if(d.book){Object.assign(book.el,d.book.el||{});Object.assign(book.mo,d.book.mo||{})}for(const k in inv)if(!book.el[k])book.el[k]={n:null};for(const k in mol)if(!book.mo[k])book.mo[k]={r:""}}catch(e){}}
+const $=id=>document.getElementById(id);
+function tgt(z){let b=z,bd=9;for(let a=z;a<=3*z+2;a++){const d=Math.abs(z-a/(1.98+.0155*Math.pow(a,2/3)));if(d<bd){bd=d;b=a}}return b-z}
+const tol=z=>z<=20?2:3;
+const stable=()=>S.p>=1&&Math.abs(S.n-tgt(S.p))<=tol(S.p);
+const ready=()=>S.p>=1&&S.p===S.e&&stable();
+const clamp=(k,v)=>Math.max(0,Math.min(MAX[k],v));
+
+document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{S[b.dataset.k]=clamp(b.dataset.k,S[b.dataset.k]+ +b.dataset.d);$("msg").textContent="";upd()});
+$("me").onclick=()=>{S.e=S.p;upd()};
+$("mn").onclick=()=>{if(S.p){S.n=tgt(S.p);upd()}};
+$("collect").onclick=()=>{
+  if(!ready())return;const s=SY[S.p-1];inv[s]=(inv[s]||0)+1;if(!book.el[s]||book.el[s].n==null)book.el[s]={n:S.n};
+  S.p=S.n=S.e=0;$("msg").textContent="You made "+NM[SY.indexOf(s)]+" ("+s+")!";upd();
+};
+const clearRes=()=>{$("res").innerHTML=""};
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{mode=b.dataset.mode;upd()});
+$("inv").onclick=ev=>{const c=ev.target.closest("[data-s]");if(!c)return;const s=c.dataset.s;if(!inv[s])return;
+  if(mode==="split"){const z=SY.indexOf(s)+1,b=book.el[s],n=b&&b.n!=null?b.n:tgt(z);
+    if(S.p+z>MAX.p||S.n+n>MAX.n||S.e+z>MAX.e){$("msg").textContent="Not enough room on the workbench. Clear some particles first.";return}
+    inv[s]--;S.p+=z;S.n+=n;S.e+=z;$("msg").textContent="Took apart 1 "+s+" into "+z+" protons, "+n+" neutrons and "+z+" electrons.";upd();return}
+  inv[s]--;bench[s]=(bench[s]||0)+1;clearRes();upd()};
+$("molInv").onclick=ev=>{const c=ev.target.closest("[data-m]");if(!c)return;const m=c.dataset.m;if(!mol[m])return;
+  if(mode==="split"){mol[m]--;const a=parse(BYN[m]),t=[];for(const e in a){inv[e]=(inv[e]||0)+a[e];t.push(a[e]+"× "+e);if(!book.el[e])book.el[e]={n:null}}
+    $("res").innerHTML='<div class="mut" style="padding-top:26px"></div>';$("res").firstChild.textContent="Took apart "+m+" into "+t.join(" + ")+".";upd();return}
+  mol[m]--;benchM[m]=(benchM[m]||0)+1;clearRes();upd()};
+$("bench").onclick=ev=>{const c=ev.target.closest("[data-s],[data-m]");if(!c)return;const s=c.dataset.s,m=c.dataset.m;
+  if(s){bench[s]--;if(!bench[s])delete bench[s];inv[s]=(inv[s]||0)+1}else{benchM[m]--;if(!benchM[m])delete benchM[m];mol[m]=(mol[m]||0)+1}clearRes();upd()};
+$("clr").onclick=()=>{for(const s in bench){inv[s]=(inv[s]||0)+bench[s];delete bench[s]}for(const m in benchM){mol[m]=(mol[m]||0)+benchM[m];delete benchM[m]}clearRes();upd()};
+const DB={},BYN={};
+function parse(f){const st=[{}],re=/([A-Z][a-z]?)(\d*)|(\()|(\))(\d*)/g;let m;
+  while(m=re.exec(f)){const t=st[st.length-1];if(m[1])t[m[1]]=(t[m[1]]||0)+(+m[2]||1);else if(m[3])st.push({});else{const o=st.pop(),k=+m[5]||1,u=st[st.length-1];for(const e in o)u[e]=(u[e]||0)+o[e]*k}}return st[0]}
+"H2|Hydrogen gas;O2|Oxygen gas;O3|Ozone;N2|Nitrogen gas;F2|Fluorine gas;Cl2|Chlorine gas;Br2|Bromine;I2|Iodine;P4|White phosphorus;S8|Sulfur;C60|Buckminsterfullerene;He|Helium;Ne|Neon;Ar|Argon;Kr|Krypton;Xe|Xenon;Rn|Radon;H2O|Water;H2O2|Hydrogen peroxide;H2S|Hydrogen sulfide;HCl|Hydrogen chloride;HF|Hydrogen fluoride;HBr|Hydrogen bromide;HI|Hydrogen iodide;NH3|Ammonia;N2H4|Hydrazine;PH3|Phosphine;AsH3|Arsine;SiH4|Silane;GeH4|Germane;B2H6|Diborane;CH4|Methane;C2H6|Ethane;C3H8|Propane;C4H10|Butane;C5H12|Pentane;C6H14|Hexane;C8H18|Octane;C2H4|Ethylene;C2H2|Acetylene;C3H6|Propene;C6H6|Benzene;C7H8|Toluene;C6H12|Cyclohexane;C10H8|Naphthalene;C8H8|Styrene;CH4O|Methanol;C2H6O|Ethanol;C2H6O|Dimethyl ether;C3H8O|Isopropanol;CH2O|Formaldehyde;C2H4O|Acetaldehyde;C3H6O|Acetone;CH2O2|Formic acid;C2H4O2|Acetic acid;C2H2O4|Oxalic acid;C6H8O7|Citric acid;C3H6O3|Lactic acid;C4H6O6|Tartaric acid;C4H8O2|Ethyl acetate;C4H10O|Diethyl ether;C2H6O2|Ethylene glycol;C3H8O3|Glycerol;C6H6O|Phenol;C7H6O2|Benzoic acid;C6H7N|Aniline;C6H12O6|Glucose;C6H12O6|Fructose;C12H22O11|Sucrose;C6H8O6|Vitamin C;C9H8O4|Aspirin;C8H9NO2|Paracetamol;C8H10N4O2|Caffeine;C8H11NO2|Dopamine;CH4N2O|Urea;CH5N|Methylamine;C2H7N|Dimethylamine;C2H5NO2|Glycine;C3H7NO2|Alanine;C5H5N5|Adenine;C5H5N5O|Guanine;C4H5N3O|Cytosine;C5H6N2O2|Thymine;C4H4N2O2|Uracil;CH3Cl|Chloromethane;CH2Cl2|Dichloromethane;CHCl3|Chloroform;CCl4|Carbon tetrachloride;CF4|Carbon tetrafluoride;C2H3Cl|Vinyl chloride;C2F4|Tetrafluoroethylene;CO|Carbon monoxide;CO2|Carbon dioxide;NO|Nitric oxide;NO2|Nitrogen dioxide;N2O|Nitrous oxide;N2O3|Dinitrogen trioxide;N2O4|Dinitrogen tetroxide;N2O5|Dinitrogen pentoxide;SO2|Sulfur dioxide;SO3|Sulfur trioxide;P4O10|Phosphorus pentoxide;Cl2O|Dichlorine monoxide;ClO2|Chlorine dioxide;OF2|Oxygen difluoride;SiO2|Silica (quartz);Al2O3|Alumina;Fe2O3|Rust (iron(III) oxide);Fe3O4|Magnetite;FeO|Iron(II) oxide;CuO|Copper(II) oxide;Cu2O|Copper(I) oxide;ZnO|Zinc oxide;MgO|Magnesium oxide;CaO|Quicklime;Na2O|Sodium oxide;K2O|Potassium oxide;Li2O|Lithium oxide;TiO2|Titanium dioxide;MnO2|Manganese dioxide;PbO|Lead(II) oxide;PbO2|Lead dioxide;SnO2|Tin dioxide;Cr2O3|Chromium(III) oxide;V2O5|Vanadium pentoxide;WO3|Tungsten trioxide;Ag2O|Silver oxide;HgO|Mercury(II) oxide;UO2|Uranium dioxide;BeO|Beryllium oxide;B2O3|Boron trioxide;As2O3|Arsenic trioxide;NaCl|Table salt;KCl|Potassium chloride;LiCl|Lithium chloride;CaCl2|Calcium chloride;MgCl2|Magnesium chloride;AlCl3|Aluminium chloride;FeCl3|Iron(III) chloride;FeCl2|Iron(II) chloride;CuCl2|Copper(II) chloride;ZnCl2|Zinc chloride;AgCl|Silver chloride;AgBr|Silver bromide;AgI|Silver iodide;HgCl2|Mercury(II) chloride;PbCl2|Lead(II) chloride;BaCl2|Barium chloride;CsCl|Caesium chloride;NH4Cl|Ammonium chloride;NaF|Sodium fluoride;CaF2|Fluorite;LiF|Lithium fluoride;MgF2|Magnesium fluoride;AlF3|Aluminium fluoride;KBr|Potassium bromide;NaBr|Sodium bromide;KI|Potassium iodide;NaI|Sodium iodide;SF6|Sulfur hexafluoride;PCl3|Phosphorus trichloride;PCl5|Phosphorus pentachloride;SiCl4|Silicon tetrachloride;SiF4|Silicon tetrafluoride;BF3|Boron trifluoride;BCl3|Boron trichloride;TiCl4|Titanium tetrachloride;UF6|Uranium hexafluoride;NF3|Nitrogen trifluoride;XeF2|Xenon difluoride;XeF4|Xenon tetrafluoride;NaOH|Caustic soda;KOH|Potassium hydroxide;LiOH|Lithium hydroxide;Ca(OH)2|Slaked lime;Mg(OH)2|Milk of magnesia;Al(OH)3|Aluminium hydroxide;HNO3|Nitric acid;HNO2|Nitrous acid;H2SO4|Sulfuric acid;H2SO3|Sulfurous acid;H3PO4|Phosphoric acid;H2CO3|Carbonic acid;HClO|Hypochlorous acid;HCN|Hydrogen cyanide;NaHCO3|Baking soda;Na2CO3|Soda ash;CaCO3|Limestone;MgCO3|Magnesium carbonate;K2CO3|Potash;Li2CO3|Lithium carbonate;BaCO3|Barium carbonate;Na2SO4|Sodium sulfate;CaSO4|Gypsum;MgSO4|Epsom salt;CuSO4|Copper(II) sulfate;ZnSO4|Zinc sulfate;K2SO4|Potassium sulfate;(NH4)2SO4|Ammonium sulfate;BaSO4|Barium sulfate;Al2(SO4)3|Aluminium sulfate;FeSO4|Iron(II) sulfate;NaNO3|Sodium nitrate;KNO3|Saltpeter;AgNO3|Silver nitrate;NH4NO3|Ammonium nitrate;Ca(NO3)2|Calcium nitrate;Pb(NO3)2|Lead(II) nitrate;Na3PO4|Sodium phosphate;Ca3(PO4)2|Calcium phosphate;KMnO4|Potassium permanganate;K2Cr2O7|Potassium dichromate;NaClO|Bleach (sodium hypochlorite);KClO3|Potassium chlorate;NaN3|Sodium azide;NaCN|Sodium cyanide;Na2S|Sodium sulfide;ZnS|Zinc sulfide;FeS|Iron(II) sulfide;FeS2|Pyrite;PbS|Galena;HgS|Cinnabar;CdS|Cadmium sulfide;CaC2|Calcium carbide;SiC|Silicon carbide;Fe3C|Cementite;WC|Tungsten carbide;AlN|Aluminium nitride;Si3N4|Silicon nitride;BN|Boron nitride;Mg3N2|Magnesium nitride;Li3N|Lithium nitride;LiH|Lithium hydride;CaH2|Calcium hydride;LiAlH4|Lithium aluminium hydride;NaBH4|Sodium borohydride".split(";").forEach(r=>{const[f,n]=r.split("|"),c=parse(f),k=Object.keys(c).sort().map(e=>e+c[e]).join("");(DB[k]=DB[k]||[]).push([n,f]);BYN[n]=f});
+const sub=f=>f.replace(/\d/g,d=>"\u2080\u2081\u2082\u2083\u2084\u2085\u2086\u2087\u2088\u2089"[d]);
+const gcd=(a,b)=>b?gcd(b,a%b):a;
+$("combine").onclick=()=>{
+  if(!Object.keys(bench).length&&!Object.keys(benchM).length)return;
+  const tot={...bench};
+  for(const m in benchM){const c=parse(BYN[m]);for(const e in c)tot[e]=(tot[e]||0)+c[e]*benchM[m]}
+  const ks=Object.keys(tot).sort(),n=ks.map(k=>tot[k]).reduce(gcd),res=$("res");
+  const parts=Object.keys(bench).map(k=>bench[k]+"× "+k).concat(Object.keys(benchM).map(m=>benchM[m]+"× "+sub(BYN[m])));
+  let hit=null,mult=1;
+  for(let g=n;g>=1;g--){if(n%g)continue;const h=DB[ks.map(k=>k+tot[k]/g).join("")];if(h){hit=h;mult=g;break}}
+  res.innerHTML='<div class="mut" style="padding-top:26px">Searching…</div>';
+  setTimeout(()=>{
+    if(!hit){res.innerHTML='<div class="no">This can not work</div>';return}
+    const v=hit[Math.floor(Math.random()*hit.length)];
+    res.innerHTML='<div class="ok"><div class="mut">You made</div><div class="nm"></div><div class="fm"></div><div class="mut fa"></div></div>';
+    res.querySelector(".nm").textContent=(mult>1?mult+"× ":"")+v[0];res.querySelector(".fm").textContent=sub(v[1]);
+    const o=hit.filter(h=>h!==v);
+    if(o.length)res.querySelector(".fa").textContent="The same atoms can also make: "+o.map(h=>h[0]+" ("+sub(h[1])+")").join(", ");
+    for(const k in bench)delete bench[k];for(const k in benchM)delete benchM[k];
+    mol[v[0]]=(mol[v[0]]||0)+mult;if(!book.mo[v[0]]||!book.mo[v[0]].r)book.mo[v[0]]={r:parts.join(" + ")};upd();
+  },450);
+};
+
+function chips(o,ph=1){return Object.keys(o).filter(k=>o[k]>0).sort((a,b)=>SY.indexOf(a)-SY.indexOf(b)).map(k=>'<button class="chip" data-s="'+k+'">'+k+'<b>'+o[k]+'</b></button>').join("")||(ph?'<span class="mut">Nothing yet</span>':"")}
+function renderBook(){
+  const els=Object.keys(book.el).sort((a,b)=>SY.indexOf(a)-SY.indexOf(b)),ms=Object.keys(book.mo).filter(k=>BYN[k]);
+  $("bk").textContent="("+els.length+" elements · "+ms.length+" molecules)";
+  const row=(a,b,c)=>'<div class="rec"><span class="f">'+a+'</span> <span class="mut">'+b+'</span><div class="mut">'+c+'</div></div>';
+  const hd=t=>'<div class="mut" style="margin:8px 0 2px;font-weight:700">'+t+'</div>';
+  $("book").innerHTML=(els.length||ms.length)?
+    (els.length?hd("ELEMENTS"):"")+els.map(k=>{const z=SY.indexOf(k)+1,n=book.el[k].n;return row(k,NM[z-1],n==null?"Recipe not recorded":z+" protons · "+n+" neutrons · "+z+" electrons")}).join("")
+    +(ms.length?hd("MOLECULES"):"")+ms.map(k=>row(sub(BYN[k]),k,book.mo[k].r?"Made from: "+book.mo[k].r:"Recipe not recorded")).join("")
+    :'<div class="mut">Nothing yet. Collect an atom or make a molecule and it will appear here.</div>';
+}
+function mchips(o){return Object.keys(o).filter(k=>o[k]>0&&BYN[k]).map(k=>'<button class="chip" data-m="'+k+'">'+sub(BYN[k])+'<b>'+o[k]+'</b><span class="mut" style="margin-left:6px">'+k+'</span></button>').join("")}
+function upd(){
+  $("cp").textContent=S.p;$("cn").textContent=S.n;$("ce").textContent=S.e;
+  let h;
+  if(!S.p)h='<div class="mut" style="padding-top:22px">Add protons to build a mystery element. You’ll learn what it is when you collect it.</div>';
+  else{
+    const q=S.p-S.e,qs=q===0?"neutral":(q>0?"+"+q:""+q)+" ion",t=tgt(S.p),T=tol(S.p);
+    h='<div class="sym">?</div>'
+     +'<div class="mut">Atomic number '+S.p+' · mass number '+(S.p+S.n)+' · charge: '+qs+'</div>'
+     +'<div class="mut">'+(stable()?'<span style="color:var(--ok)">Stable nucleus ✓</span>':'Unstable nucleus — try about '+Math.max(0,t-T)+'–'+(t+T)+' neutrons')+'</div>';
+  }
+  $("info").innerHTML=h;
+  $("collect").disabled=!ready();
+  $("collect").textContent=ready()?"Collect atom":"Collect atom (needs stable, neutral atom)";
+  $("inv").innerHTML=chips(inv);$("molInv").innerHTML=mchips(mol)||'<span class="mut">None yet</span>';$("bench").innerHTML=chips(bench,0)+mchips(benchM)||'<span class="mut">Mixer is empty</span>';
+  $("combine").disabled=!Object.keys(bench).length&&!Object.keys(benchM).length;
+  document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("on",b.dataset.mode===mode));
+  renderBook();save();
+}
+
+const cv=$("cv"),cx=cv.getContext("2d");
+(function(){const d=window.devicePixelRatio||1;cv.width=320*d;cv.height=320*d;cx.setTransform(d,0,0,d,0,0)})();
+function dot(x,y,r,c){cx.beginPath();cx.arc(x,y,r,0,7);cx.fillStyle=c;cx.fill();cx.strokeStyle="rgba(0,0,0,.35)";cx.lineWidth=.8;cx.stroke()}
+function shells(e){const a=[];let l=e;for(const c of CAP){if(l<=0)break;a.push(Math.min(c,l));l-=c}return a.length?a:[0]}
+let t=0;
+function frame(){
+  t+=.012;cx.clearRect(0,0,320,320);
+  const line=getComputedStyle(document.documentElement).getPropertyValue("--line");
+  const sh=shells(S.e),ns=sh.length;
+  sh.forEach((k,i)=>{
+    const r=ns<=3?60+35*i:46+i*104/(ns-1);
+    cx.beginPath();cx.arc(160,160,r,0,7);cx.strokeStyle=line;cx.lineWidth=1;cx.stroke();
+    for(let j=0;j<k;j++){const a=t*(1.3-i*.12)*(i%2?-1:1)+j*6.2832/k;dot(160+r*Math.cos(a),160+r*Math.sin(a),S.e>18?2.8:4.5,"#3b82f6")}
+  });
+  const tot=S.p+S.n,Rn=Math.min(5.6*Math.sqrt(tot),32),s=tot?Rn/Math.sqrt(tot):0,dr=Math.max(1.5,Math.min(5.2,s*.55));
+  for(let i=0;i<tot;i++){
+    const rr=s*Math.sqrt(i),a=i*2.39996,isP=Math.floor((i+1)*S.p/tot)>Math.floor(i*S.p/tot);
+    dot(160+rr*Math.cos(a)+Math.sin(t*5+i)*.6,160+rr*Math.sin(a)+Math.cos(t*5+i*2)*.6,dr,isP?"#e5484d":"#8b8fa3");
+  }
+  requestAnimationFrame(frame);
+}
+load();upd();frame();
+</script>
+</body></html>
